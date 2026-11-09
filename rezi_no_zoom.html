@@ -1,4 +1,4 @@
-<!-- 2026/10月UI変更前版 -->
+<!-- 2026/11月UI変更後版（理論在高・実在高入力対応） -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -61,7 +61,7 @@
   --ok-bg:linear-gradient(180deg,rgba(48,209,88,.11),rgba(255,255,255,.04));
   --ok-line:rgba(48,209,88,.32);
 
-  --text:#f5f5f7;   /* vibrancy: primary */
+  --text:#f5f5f7;    /* vibrancy: primary */
   --text2:#d2d2d7;  /* vibrancy: secondary */
   --muted:#8e8e93;  /* vibrancy: tertiary（半透明面でも読める濃度） */
   --footer:#6e6e73;
@@ -155,7 +155,6 @@ body::before{
   backdrop-filter:var(--blur-chrome); -webkit-backdrop-filter:var(--blur-chrome);
   font-size:.8125rem; line-height:1; letter-spacing:.01em; font-weight:500; color:var(--text);
 }
-/* scroll edge effect：1pxの罫線ではなく，重なる所だけをぼかす */
 .nav::after{
   content:""; position:absolute; left:0; right:0; top:100%; height:1.25rem;
   background:linear-gradient(to bottom, var(--chrome-edge), transparent);
@@ -176,8 +175,8 @@ body::before{
 }
 h1{
   font-size:clamp(2.125rem,9vw,2.875rem);
-  line-height:1.05;            /* 大きい文字は詰める */
-  letter-spacing:-.024em;      /* 大きいほど負のトラッキング */
+  line-height:1.05;
+  letter-spacing:-.024em;
   font-weight:700; margin:0 0 .75rem;
 }
 .sub{
@@ -205,15 +204,15 @@ h1{
 .deck > .card{
   position:absolute; top:0; left:0; width:100%;
   will-change:transform,opacity;
-  touch-action:pan-y;              /* 横は自前で扱う */
+  touch-action:pan-y;
 }
 .label{
   font-size:.875rem; line-height:1.45; letter-spacing:.008em;
-  color:var(--muted); margin-bottom:.5rem;
+  color:var(--muted); margin-bottom:.375rem;
 }
 .step-title{
   font-size:1.375rem; font-weight:700; line-height:1.2; letter-spacing:-.014em;
-  margin-bottom:.625rem; display:flex; align-items:center; gap:.625rem;
+  margin-bottom:.875rem; display:flex; align-items:center; gap:.625rem;
 }
 .step-title .n{
   background:linear-gradient(180deg,var(--accent-top),var(--accent2)); color:#fff;
@@ -227,11 +226,12 @@ h1{
 .display{
   background:var(--well);
   border:1px solid var(--line2); border-radius:1rem;
-  padding:1.125rem 1.25rem; min-height:2.75rem; text-align:right;
-  font-size:clamp(2rem,8.5vw,2.5rem); font-weight:600; line-height:1.1;
+  padding:.875rem 1.25rem; min-height:2.75rem; text-align:right;
+  font-size:clamp(1.75rem,7.5vw,2.25rem); font-weight:600; line-height:1.1;
   letter-spacing:-.022em;
   font-variant-numeric:tabular-nums; font-feature-settings:"tnum";
-  will-change:transform;
+  will-change:transform; cursor:pointer; user-select:none; -webkit-user-select:none;
+  margin-bottom:.75rem;
 }
 .display.active{
   background:var(--well-active);
@@ -239,7 +239,7 @@ h1{
   box-shadow:0 0 0 .25rem var(--ring);
 }
 .display .unit{font-size:1.125rem; font-weight:400; letter-spacing:0; color:var(--muted); margin-left:.375rem;}
-.display .ph{color:var(--ph); font-weight:300; font-size:2.125rem;}
+.display .ph{color:var(--ph); font-weight:300; font-size:1.875rem;}
 
 /* --- keypad（軽いマテリアル＝触れる要素） --- */
 .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:.625rem; margin-top:.875rem;}
@@ -251,12 +251,11 @@ h1{
   font-variant-numeric:tabular-nums;
   cursor:pointer; user-select:none; -webkit-user-select:none;
   will-change:transform;
-  /* 押下フィードバックは pointerdown でバネ駆動（CSSトランジションは使わない） */
 }
 .key:hover{background:var(--mat-control-hi);}
 .key.pressed{background:var(--mat-control-press);}
 .key.util{background:var(--err-soft); border-color:var(--err-soft-line); color:var(--err); font-size:1.25rem;}
-.key.sign{background:var(--accent-soft); border-color:var(--accent-soft-line); color:var(--accent); font-size:1.5rem;}
+.key.empty{visibility:hidden; pointer-events:none;}
 
 /* --- buttons --- */
 .btn{
@@ -337,7 +336,6 @@ h1{
    =========================================================== */
 @media (prefers-reduced-motion: reduce){
   .card,.result,.msg,.modchip,.key,.btn,.display{transition:opacity .2s ease !important;}
-  /* バネ駆動はJS側でも即時スナップに切り替わる */
 }
 @media (prefers-reduced-transparency: reduce){
   .nav,.card,.result{backdrop-filter:none; -webkit-backdrop-filter:none;}
@@ -355,24 +353,29 @@ h1{
 </head>
 <body>
 <div class="app">
-  <div class="nav" id="nav"><span class="dot"></span>レジ過不足調整</div>
 
   <div class="hero">
-    <div class="eyebrow">Cash Register Utility</div>
-    <h1>レジ過不足<br>調整計算</h1>
-    <p class="sub">ズレを入力するだけ。最適な構成を、すぐに。</p>
+    <h1>レジ過不足計算</h1>
   </div>
 
   <div class="deck" id="deck">
-    <!-- STEP 1 -->
+<!-- STEP 1 -->
     <div class="card" id="card1">
-      <div class="step-title"><span class="n">1</span>ズレの額を入力</div>
-      <div class="label">不足のときは「−」で符号を反転</div>
-      <div class="display active" id="dispA" data-field="a"><span class="ph">0</span></div>
+      <div class="step-title"><span class="n">1</span>理論在高と実在高を入力</div>
+      
+      <div class="input-sentence" style="font-size: 1.0625rem; line-height: 2.2; color: var(--text);">
+        レジの理論在高（売上日報の金額）が
+        <div class="display active" id="dispTheoretical" data-field="theoretical" style="display: inline-block; min-width: 6.5rem; min-height: 2.2rem; padding: 0.2rem 0.75rem; margin: 0 0.25rem; vertical-align: middle;"><span class="ph">0</span></div>
+        円で，<br>
+        現金 / 黒端末の実在高が
+        <div class="display" id="dispActual" data-field="actual" style="display: inline-block; min-width: 6.5rem; min-height: 2.2rem; padding: 0.2rem 0.75rem; margin: 0 0.25rem; vertical-align: middle;"><span class="ph">0</span></div>
+        円．
+      </div>
+      
       <div class="keypad" id="padA"></div>
       <button class="btn" id="btnNext">次へ</button>
     </div>
-
+     
     <!-- STEP 2 -->
     <div class="card" id="card2">
       <div class="step-title"><span class="n">2</span>戻す額を入力</div>
@@ -381,7 +384,7 @@ h1{
       <div class="display active" id="dispB" data-field="b"><span class="ph">0</span></div>
       <div class="keypad" id="padB"></div>
       <button class="btn" id="btnCalc">計算する</button>
-      <button class="btn secondary" id="btnBack">ズレの額を修正</button>
+      <button class="btn secondary" id="btnBack">金額を修正</button>
       <div class="swipe-hint">右へスワイプしても戻れます</div>
       <div id="msgB"></div>
     </div>
@@ -398,22 +401,20 @@ h1{
 <script>
 "use strict";
 
-/* ===== ピンチによるズーム抑止（ダブルタップ拡大はCSSのtouch-action:manipulationで無効化） ===== */
+/* ===== ピンチによるズーム抑止 ===== */
 document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
 document.addEventListener('gesturechange', function(e){ e.preventDefault(); });
 
-/* ===== データ定義（Python版と同一） ===== */
-// --------------------2026/10月版--------------------------------
+/* ================================================== 2026年11月版 ================================================== */
 const menuPrices = {
   'パイ(250円)':250,
   'クッキー(270円)':270,
-  'モンブラン(300円)':300,
-  'モンブランクッキー(320円)':320,
-  '焼きチーズ(340円)':340,
-  'GODIVA(520円)':520
+  'おさつバター(360円)':360,
+  'さつまいもクッキー(360円)':360,
+  '信玄餅(390円)':390
 };
-// ------------------------2026/10月版----------------------------
-// 戻し(b)に使える袋
+/* ================================================================================================================= */
+
 const returnBags = {
   0:{count:0,items:{}},
   3:{count:1,items:{'小(3円)':1}},
@@ -421,7 +422,7 @@ const returnBags = {
   6:{count:2,items:{'小(3円)':2}},
   8:{count:2,items:{'小(3円)':1,'大(5円)':1}}
 };
-// 空打ち(c)に使える袋
+
 const addBags = {
   0:{count:0,items:{}},
   3:{count:1,items:{'小(3円)':1}},
@@ -430,9 +431,8 @@ const addBags = {
   8:{count:2,items:{'小(3円)':1,'大(5円)':1}},
   11:{count:3,items:{'小(3円)':2,'大(5円)':1}}
 };
-// Python互換のmod（負数対応）
+
 const mod = (n,m)=>((n%m)+m)%m;
-// 整数キーを挿入順（=昇順）で取り出す
 const keysNum = o => Object.keys(o).map(Number);
 
 /* ===== ステップ1のロジック：最適な戻し下一桁を探索 ===== */
@@ -440,7 +440,7 @@ function computeOptimal(a){
   const aMod = mod(a,10);
   let bestCost = Infinity;
   let optimalBMods = [];
-  const bestBagCombos = {}; // b_mod -> [b_val, c_val]
+  const bestBagCombos = {};
 
   for(const bVal of keysNum(returnBags)){
     const bInfo = returnBags[bVal];
@@ -487,7 +487,6 @@ function computePlan(a, b, optimalBMods, bestBagCombos){
       msg:`金額が小さすぎます（袋の金額 ${cBagVal} 円を引くとマイナス）。より大きな「戻す額」を入力してください。`, c};
   }
 
-  // DP：10円刻みで最小点数の構成
   const dp = {0:{}};
   for(let i=10; i<=cMenuTarget; i+=10){
     let minItems = Infinity, bestCombo = null;
@@ -516,7 +515,6 @@ function computePlan(a, b, optimalBMods, bestBagCombos){
     msg:`袋を引いた残り ${cMenuTarget} 円は現在のメニューでは構成できません。さらに大きな「戻す額」を入力してください。`};
 }
 
-/* ===== 袋アイテムを文字列化 ===== */
 function bagStr(items){
   const keys = Object.keys(items);
   if(keys.length===0) return 'レジ袋なし';
@@ -524,14 +522,11 @@ function bagStr(items){
 }
 
 /* ===========================================================
-   モーション基盤：バネ（damping ratio × response）
-   - 常に「現在の表示値」から走る → 中断・反転が自然
-   - re-target 時も速度を引き継ぐ（反転時の“壁”を作らない）
+   モーション基盤：バネ
    =========================================================== */
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 class Spring{
-  /** @param {number} value 初期値 */
   constructor(value, opts){
     this.value = value; this.velocity = 0; this.target = value;
     this.precision = (opts && opts.precision) || 0.1;
@@ -539,7 +534,6 @@ class Spring{
     this.setParams(opts || {});
     this.listeners = []; this.raf = null; this.onRest = null;
   }
-  /** bounce 0 = damping 1.0（オーバーシュートなし）, 0.2 ≒ damping 0.8 */
   setParams({bounce = 0, duration = 0.4} = {}){
     this.zeta = 1 - Math.min(0.9, Math.max(0, bounce));
     this.omega = (2 * Math.PI) / duration;
@@ -547,9 +541,7 @@ class Spring{
   }
   onUpdate(fn){ this.listeners.push(fn); return this; }
   emit(){ for(const fn of this.listeners) fn(this.value, this); }
-  /** 値を直接差し替え（ドラッグ中の1:1追従用。速度は履歴から別管理） */
   setValue(v){ this.stop(); this.value = v; this.emit(); return this; }
-  /** 目標を差し替え。velocity を渡すと指紋の速度をそのまま引き継ぐ */
   to(target, {velocity, bounce, duration} = {}){
     if(bounce !== undefined || duration !== undefined){
       this.setParams({bounce: bounce ?? (1 - this.zeta), duration: duration ?? (2*Math.PI/this.omega)});
@@ -568,7 +560,7 @@ class Spring{
     let last = performance.now();
     const tick = (now) => {
       let dt = (now - last) / 1000; last = now;
-      if(dt > 1/30) dt = 1/30;                 // タブ復帰時の暴走を防ぐ
+      if(dt > 1/30) dt = 1/30;
       const steps = Math.max(1, Math.ceil(dt / (1/120)));
       const h = dt / steps;
       const k = this.omega * this.omega;
@@ -591,24 +583,18 @@ class Spring{
   stop(){ if(this.raf !== null){ cancelAnimationFrame(this.raf); this.raf = null; } return this; }
 }
 
-/* 速度からの着地点予測（Apple の Designing Fluid Interfaces と同じ指数減衰形） */
 function project(initialVelocity, decelerationRate = 0.998){
   return (initialVelocity / 1000) * decelerationRate / (1 - decelerationRate);
 }
-/* ラバーバンド：境界の外側は進むほど追従が鈍る */
 function rubberband(overshoot, dimension, constant = 0.55){
   return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
 }
 const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
 
-/* 触覚：意味のある瞬間だけ（commit / error） */
 function haptic(pattern){
   if(navigator.vibrate) { try{ navigator.vibrate(pattern); }catch(_){} }
 }
 
-/* ===========================================================
-   押下フィードバック：pointerdown で即座に，離したらバネで戻る
-   =========================================================== */
 function makePressable(el, pressScale){
   const s = new Spring(1, {bounce:0, duration:0.12, precision:0.0015});
   s.onUpdate(v => { el.style.transform = `scale(${v})`; });
@@ -617,24 +603,21 @@ function makePressable(el, pressScale){
     if(el.disabled) return;
     holding = true;
     el.classList.add('pressed');
-    // response 0.12s：知覚上は即時。それでも中断可能
     s.to(pressScale, {bounce:0, duration:0.12});
   };
   const up = () => {
     if(!holding) return;
     holding = false;
     el.classList.remove('pressed');
-    // 離した瞬間は“勢い”があるので少しだけバウンス
     s.to(1, {bounce:0.28, duration:0.34});
   };
   el.addEventListener('pointerdown', down);
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
-  el.addEventListener('pointerleave', up);   // 離れて戻れる＝キャンセル可能
+  el.addEventListener('pointerleave', up);
   return s;
 }
 
-/* 出現アニメーション：ガラス面は「ぼけ＋拡大」で“実体化”させる */
 function materialize(el, {blur = 8, lift = 12, scaleFrom = 0.965, bounce = 0, duration = 0.45} = {}){
   if(!el) return;
   const s = new Spring(0, {bounce, duration, precision:0.002});
@@ -651,8 +634,7 @@ function materialize(el, {blur = 8, lift = 12, scaleFrom = 0.965, bounce = 0, du
 }
 
 /* ===========================================================
-   ステップ遷移：0 = STEP1，1 = STEP2 を1本のバネで駆動
-   ボタンでもスワイプでも同じ値を動かすので，経路が常に対称
+   ステップ遷移
    =========================================================== */
 const deck   = document.getElementById('deck');
 const card1  = document.getElementById('card1');
@@ -672,7 +654,7 @@ function measure(){
 
 function applyNav(p){
   const x2 = (1 - p) * W;
-  const x1 = -p * W * 0.30;           // 下の層は控えめに動く（視差）
+  const x1 = -p * W * 0.30;
   card2.style.transform = `translate3d(${x2}px,0,0)`;
   card2.style.opacity = String(clamp01(p * 1.25));
   card1.style.transform = `translate3d(${x1}px,0,0) scale(${1 - 0.035 * clamp01(p)})`;
@@ -685,10 +667,9 @@ function applyNav(p){
 }
 navSpring.onUpdate(applyNav);
 
-/* --- STEP2 を右へスワイプして戻す（ボタンと同じ機能・1:1追従） --- */
 (function enableSwipeBack(){
   let active = false, armed = false, startX = 0, startY = 0, startNav = 1;
-  let history = [];   // 速度は直近数フレームの履歴から出す
+  let history = [];
 
   const interactive = t => t.closest('button, input, textarea, select, a');
 
@@ -706,7 +687,6 @@ navSpring.onUpdate(applyNav);
     const dy = e.clientY - startY;
 
     if(!active){
-      // 10px のヒステリシス。縦が勝っていればスクロールに譲る
       if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
       if(Math.abs(dy) > Math.abs(dx)){ armed = false; return; }
       active = true;
@@ -717,8 +697,8 @@ navSpring.onUpdate(applyNav);
     history.push({x:e.clientX, t:performance.now()});
     if(history.length > 6) history.shift();
 
-    let p = startNav - dx / W;          // 指に 1:1 で貼り付く
-    if(p > 1){                          // 左方向には行き先がない → ラバーバンド
+    let p = startNav - dx / W;
+    if(p > 1){
       p = 1 + rubberband(p - 1, 1);
     } else if(p < 0){
       p = rubberband(p, 1);
@@ -733,7 +713,6 @@ navSpring.onUpdate(applyNav);
     if(!wasActive) return;
     try{ card2.releasePointerCapture(e.pointerId); }catch(_){}
 
-    // 指の速度（px/s）→ 正規化速度（nav/s）
     const now = performance.now();
     const recent = history.filter(h => now - h.t < 90);
     let vx = 0;
@@ -743,11 +722,9 @@ navSpring.onUpdate(applyNav);
     }
     const vNav = -vx / W;
 
-    // 着地点を速度から予測してから，近い方のスナップ点を選ぶ
     const projected = navSpring.value + project(vNav);
     const target = projected < 0.5 ? 0 : 1;
 
-    // 勢いのあるジェスチャなので少しだけバウンス。速度はそのまま引き継ぐ
     navSpring.to(target, {velocity: vNav, bounce:0.2, duration:0.35});
     if(target === 0){
       haptic(8);
@@ -761,57 +738,81 @@ navSpring.onUpdate(applyNav);
 /* ===========================================================
    入力 UI
    =========================================================== */
-const state = {a:'', b:'', active:'a', optimal:null};
+const state = {theoretical:'', actual:'', b:'', activeStep1:'theoretical', optimal:null};
 
-function buildPad(container, field){
-  const keys = ['1','2','3','4','5','6','7','8','9','±','0','⌫'];
+function buildPad(container, step){
+  // 1ページ目は正の数のみ（マイナス不可），2ページ目も同様
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
   container.innerHTML='';
   keys.forEach(k=>{
     const btn=document.createElement('button');
     btn.className='key';
     if(k==='⌫') btn.className+=' util';
-    if(k==='±') btn.className+=' sign';
+    if(k==='') btn.className+=' empty';
     btn.textContent=k;
-    btn.addEventListener('click',()=>press(field,k));
-    makePressable(btn, 0.94);
+    if(k!==''){
+      btn.addEventListener('click',()=>press(step,k));
+      makePressable(btn, 0.94);
+    }
     container.appendChild(btn);
   });
 }
 
-function press(field,k){
-  let v = state[field];
+function press(step,k){
+  let targetField = step === 1 ? state.activeStep1 : 'b';
+  let v = state[targetField];
+  
   if(k==='⌫'){
-    if(v==='-'||v===''){ v=''; }
-    else v = v.slice(0,-1);
-  } else if(k==='±'){
-    if(v.startsWith('-')) v=v.slice(1);
-    else v='-'+v;
+    v = v.slice(0,-1);
   } else { // digit
-    if(v==='0') v='';        // leading zero replace
-    if(v==='-0') v='-';
+    if(v==='0') v='';
     v = v + k;
   }
-  state[field]=v;
+  state[targetField]=v;
   render();
 }
 
 function fmtDisplay(v){
-  if(v===''||v==='-'){
-    return `<span class="ph">${v==='-'?'−':'0'}</span>`;
+  if(v===''){
+    return `<span class="ph">0</span>`;
   }
   const n = parseInt(v,10);
   return `${n.toLocaleString('ja-JP')}<span class="unit">円</span>`;
 }
 
 function render(){
-  document.getElementById('dispA').innerHTML = fmtDisplay(state.a);
+  document.getElementById('dispTheoretical').innerHTML = fmtDisplay(state.theoretical);
+  document.getElementById('dispActual').innerHTML = fmtDisplay(state.actual);
   document.getElementById('dispB').innerHTML = fmtDisplay(state.b);
-  // btnNext有効化
-  const aValid = state.a!=='' && state.a!=='-';
-  document.getElementById('btnNext').disabled = !aValid;
+  
+  // ディスプレイのフォーカス切替表示
+  const dispTheo = document.getElementById('dispTheoretical');
+  const dispAct = document.getElementById('dispActual');
+  if(state.activeStep1 === 'theoretical'){
+    dispTheo.classList.add('active');
+    dispAct.classList.remove('active');
+  } else {
+    dispAct.classList.add('active');
+    dispTheo.classList.remove('active');
+  }
+
+  // btnNext有効化（両方のフィールドに入力がある場合）
+  const theoValid = state.theoretical!=='';
+  const actValid = state.actual!=='';
+  document.getElementById('btnNext').disabled = !(theoValid && actValid);
 }
 
 function parseVal(v){ return parseInt(v||'0',10); }
+
+/* --- ディスプレイタップによるアクティブ切替 --- */
+document.getElementById('dispTheoretical').addEventListener('click', ()=>{
+  state.activeStep1 = 'theoretical';
+  render();
+});
+document.getElementById('dispActual').addEventListener('click', ()=>{
+  state.activeStep1 = 'actual';
+  render();
+});
 
 /* --- btnReset の出入り --- */
 const resetSpring = new Spring(0, {bounce:0, duration:0.4, precision:0.002});
@@ -825,12 +826,17 @@ function hideReset(){ resetSpring.to(0); }
 
 /* ---- STEP1 -> STEP2 ---- */
 document.getElementById('btnNext').addEventListener('click',()=>{
-  const a = parseVal(state.a);
+  const theoretical = parseVal(state.theoretical);
+  const actual = parseVal(state.actual);
+  // ズレの額 a = 実在高 - 理論在高
+  const a = actual - theoretical;
+
   state.optimal = computeOptimal(a);
   const {optimalBMods, bestBagCombos} = state.optimal;
 
   // 条件表示
-  let html = `<div class="label">戻す額の「下一桁」を次のいずれかに:</div>
+  let html = `<div class="label">過不足額：<b>${a >= 0 ? '+' : ''}${a.toLocaleString('ja-JP')} 円</b></div>
+    <div class="label" style="margin-top:.5rem;">戻す額の「下一桁」を次のいずれかに:</div>
     <div class="modlist">${optimalBMods.map(m=>`<span class="modchip">${m}</span>`).join('')}</div>
     <div class="label">【戻しの条件】</div>`;
   optimalBMods.forEach(bm=>{
@@ -847,7 +853,6 @@ document.getElementById('btnNext').addEventListener('click',()=>{
   document.getElementById('msgB').innerHTML='';
   document.getElementById('resultBox').innerHTML='';
 
-  // チップは順に実体化して，視線を次の操作へ導く
   document.querySelectorAll('#condBox .modchip').forEach((chip,i)=>{
     chip.style.opacity='0';
     setTimeout(()=>materialize(chip,{blur:4,lift:8,scaleFrom:0.8,bounce:0.25,duration:0.4}), 90 + i*45);
@@ -862,8 +867,11 @@ document.getElementById('btnBack').addEventListener('click',()=>{
 
 /* ---- 計算 ---- */
 document.getElementById('btnCalc').addEventListener('click',()=>{
-  const a = parseVal(state.a);
+  const theoretical = parseVal(state.theoretical);
+  const actual = parseVal(state.actual);
+  const a = actual - theoretical;
   const b = parseVal(state.b);
+  
   const {optimalBMods, bestBagCombos} = state.optimal;
   const res = computePlan(a,b,optimalBMods,bestBagCombos);
   const msgBox = document.getElementById('msgB');
@@ -874,7 +882,7 @@ document.getElementById('btnCalc').addEventListener('click',()=>{
     msgBox.innerHTML = `<div class="msg ${res.type==='warn'?'warn':'err'}">${res.c!==undefined?`空打ち額 ${res.c.toLocaleString('ja-JP')} 円 ／ `:''}${res.msg}</div>`;
     measure();
     materialize(msgBox.firstElementChild,{blur:5,lift:8,scaleFrom:0.98,bounce:0,duration:0.34});
-    haptic([10,60,10]);   // error：視覚と同じ瞬間に
+    haptic([10,60,10]);
     return;
   }
   msgBox.innerHTML='';
@@ -892,13 +900,13 @@ document.getElementById('btnCalc').addEventListener('click',()=>{
       <div class="total">合計点数：${res.total} 点</div>
     </div>`;
   materialize(resultBox.firstElementChild,{blur:10,lift:14,scaleFrom:0.96,bounce:0,duration:0.45});
-  haptic(12);             // commit
+  haptic(12);
   resultBox.scrollIntoView({behavior: reduceMotion.matches ? 'auto' : 'smooth', block:'nearest'});
 });
 
 /* ---- リセット ---- */
 btnReset.addEventListener('click',()=>{
-  state.a=''; state.b=''; state.optimal=null;
+  state.theoretical=''; state.actual=''; state.b=''; state.activeStep1='theoretical'; state.optimal=null;
   navSpring.to(0, {bounce:0, duration:0.4});
   hideReset();
   document.getElementById('resultBox').innerHTML='';
@@ -908,11 +916,10 @@ btnReset.addEventListener('click',()=>{
   measure();
 });
 
-/* ---- scroll edge effect：重なる瞬間だけ境界を出す ---- */
+/* ---- scroll edge effect ---- */
 const navEdge = () => {
   const on = window.scrollY > 6;
   navEl.style.setProperty('--edge', on ? '1' : '0');
-  const after = on ? 1 : 0;
   navEl.classList.toggle('scrolled', on);
 };
 const edgeStyle = document.createElement('style');
@@ -926,8 +933,8 @@ window.addEventListener('scroll', navEdge, {passive:true});
  document.getElementById('btnBack'),
  btnReset].forEach(b => makePressable(b, 0.982));
 
-buildPad(document.getElementById('padA'),'a');
-buildPad(document.getElementById('padB'),'b');
+buildPad(document.getElementById('padA'), 1);
+buildPad(document.getElementById('padB'), 2);
 render();
 measure();
 
