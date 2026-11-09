@@ -371,7 +371,7 @@ h1{
       <div class="step-title">理論在高と実在高を入力</div>
 
       <div class="field-grid">
-        <label for="dispTheoretical">レジの理論在高<br>（売上日報の金額）が</label>
+        <label for="dispTheoretical">レジの理論在高<br>（売上日報の金額）</label>
         <div class="field-input">
           <input type="number"
                  pattern="[0-9]*"
@@ -381,7 +381,7 @@ h1{
                  placeholder="0"
                  min="0" />円
         </div>
-        <label for="dispActual">現金 / 黒端末の<br>実在高が</label>
+        <label for="dispActual">現金 / 黒端末の<br>実在高</label>
         <div class="field-input">
           <input type="number"
                  pattern="[0-9]*"
@@ -795,11 +795,15 @@ dispActual.addEventListener('input', updateStep1Status);
 dispTheoretical.addEventListener('focus', () => {
   dispTheoretical.classList.add('active');
   dispActual.classList.remove('active');
+  // タップ時にテキストを全選択して上書き可能にする
+  setTimeout(() => dispTheoretical.select(), 50);
 });
 
 dispActual.addEventListener('focus', () => {
   dispActual.classList.add('active');
   dispTheoretical.classList.remove('active');
+  // タップ時にテキストを全選択して上書き可能にする
+  setTimeout(() => dispActual.select(), 50);
 });
 
 function parseVal(v){ return parseInt(v||'0',10); }
