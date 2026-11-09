@@ -1,4 +1,4 @@
-<!-- 2026/11月UI変更後版（理論在高・実在高入力対応） -->
+<!-- 2026/11月UI変更後版（標準テンキー・理論/実在高文章入力対応） -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -63,7 +63,7 @@
 
   --text:#f5f5f7;    /* vibrancy: primary */
   --text2:#d2d2d7;  /* vibrancy: secondary */
-  --muted:#8e8e93;  /* vibrancy: tertiary（半透明面でも読める濃度） */
+  --muted:#8e8e93;  /* vibrancy: tertiary */
   --footer:#6e6e73;
   --row-line:rgba(255,255,255,.09);
 
@@ -125,7 +125,7 @@
 }
 
 /* ===========================================================
-   2. ベース / タイポグラフィ（トラッキングとリーディングはサイズ固有）
+   2. ベース / タイポグラフィ
    =========================================================== */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;-webkit-text-size-adjust:100%;}
@@ -147,7 +147,7 @@ body::before{
 }
 .app{width:100%; max-width:33rem; position:relative; z-index:1; padding:0 1.125rem;}
 
-/* --- floating chrome：コンテンツはこの下を流れる --- */
+/* --- floating chrome --- */
 .nav{
   position:sticky; top:0; z-index:30; margin:0 -1.125rem;
   height:2.875rem; display:flex; align-items:center; justify-content:center;
@@ -167,25 +167,15 @@ body::before{
 
 /* --- hero --- */
 .hero{text-align:center; padding:3.25rem 0 2rem;}
-.eyebrow{
-  font-size:.9375rem; font-weight:600; line-height:1.3; letter-spacing:.012em;
-  background:linear-gradient(90deg,var(--eyebrow-a),var(--eyebrow-b));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  margin-bottom:.5rem;
-}
 h1{
   font-size:clamp(2.125rem,9vw,2.875rem);
   line-height:1.05;
   letter-spacing:-.024em;
   font-weight:700; margin:0 0 .75rem;
 }
-.sub{
-  font-size:1.0625rem; line-height:1.45; letter-spacing:.004em;
-  color:var(--muted); margin:0;
-}
 
 /* ===========================================================
-   3. カードとステップ（deck は高さが連続的に伸縮する）
+   3. カードとステップ
    =========================================================== */
 .deck{
   position:relative;
@@ -208,11 +198,11 @@ h1{
 }
 .label{
   font-size:.875rem; line-height:1.45; letter-spacing:.008em;
-  color:var(--muted); margin-bottom:.375rem;
+  color:var(--muted); margin-bottom:.5rem;
 }
 .step-title{
   font-size:1.375rem; font-weight:700; line-height:1.2; letter-spacing:-.014em;
-  margin-bottom:.875rem; display:flex; align-items:center; gap:.625rem;
+  margin-bottom:1rem; display:flex; align-items:center; gap:.625rem;
 }
 .step-title .n{
   background:linear-gradient(180deg,var(--accent-top),var(--accent2)); color:#fff;
@@ -222,16 +212,59 @@ h1{
   box-shadow:0 .25rem .75rem var(--accent-glow);
 }
 
-/* --- display（へこんだ面：操作対象ではなく表示） --- */
+/* --- インライン入力フィールド（STEP 1用） --- */
+.inline-input {
+  display: inline-block;
+  width: 7.5rem;
+  height: 2.2rem;
+  padding: 0 0.75rem;
+  margin: 0 0.25rem;
+  vertical-align: middle;
+  background: var(--well);
+  border: 1px solid var(--line2);
+  border-radius: 0.75rem;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.inline-input:focus,
+.inline-input.active {
+  background: var(--well-active);
+  border-color: var(--accent-soft-line);
+  box-shadow: 0 0 0 0.2rem var(--ring);
+}
+
+.inline-input::placeholder {
+  color: var(--ph);
+  font-weight: 300;
+}
+
+.inline-input::-webkit-outer-spin-button,
+.inline-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.inline-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* --- display（STEP 2用） --- */
 .display{
   background:var(--well);
   border:1px solid var(--line2); border-radius:1rem;
-  padding:.875rem 1.25rem; min-height:2.75rem; text-align:right;
-  font-size:clamp(1.75rem,7.5vw,2.25rem); font-weight:600; line-height:1.1;
+  padding:1.125rem 1.25rem; min-height:2.75rem; text-align:right;
+  font-size:clamp(2rem,8.5vw,2.5rem); font-weight:600; line-height:1.1;
   letter-spacing:-.022em;
   font-variant-numeric:tabular-nums; font-feature-settings:"tnum";
-  will-change:transform; cursor:pointer; user-select:none; -webkit-user-select:none;
-  margin-bottom:.75rem;
+  will-change:transform;
 }
 .display.active{
   background:var(--well-active);
@@ -239,9 +272,9 @@ h1{
   box-shadow:0 0 0 .25rem var(--ring);
 }
 .display .unit{font-size:1.125rem; font-weight:400; letter-spacing:0; color:var(--muted); margin-left:.375rem;}
-.display .ph{color:var(--ph); font-weight:300; font-size:1.875rem;}
+.display .ph{color:var(--ph); font-weight:300; font-size:2.125rem;}
 
-/* --- keypad（軽いマテリアル＝触れる要素） --- */
+/* --- keypad（STEP 2用） --- */
 .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:.625rem; margin-top:.875rem;}
 .key{
   background:var(--mat-control); border:1px solid var(--line);
@@ -324,7 +357,6 @@ h1{
   color:var(--accent); font-variant-numeric:tabular-nums;
 }
 
-.hidden{display:none;}
 .footer{
   text-align:center; color:var(--footer);
   font-size:.75rem; line-height:1.5; letter-spacing:.012em;
@@ -332,7 +364,7 @@ h1{
 }
 
 /* ===========================================================
-   4. アクセシビリティ：3つの独立したシグナルに応答
+   4. アクセシビリティ
    =========================================================== */
 @media (prefers-reduced-motion: reduce){
   .card,.result,.msg,.modchip,.key,.btn,.display{transition:opacity .2s ease !important;}
@@ -359,23 +391,34 @@ h1{
   </div>
 
   <div class="deck" id="deck">
-<!-- STEP 1 -->
+    <!-- STEP 1 -->
     <div class="card" id="card1">
       <div class="step-title"><span class="n">1</span>理論在高と実在高を入力</div>
       
-      <div class="input-sentence" style="font-size: 1.0625rem; line-height: 2.2; color: var(--text);">
+      <div class="input-sentence" style="font-size: 1.0625rem; line-height: 2.4; color: var(--text);">
         レジの理論在高（売上日報の金額）が
-        <div class="display active" id="dispTheoretical" data-field="theoretical" style="display: inline-block; min-width: 6.5rem; min-height: 2.2rem; padding: 0.2rem 0.75rem; margin: 0 0.25rem; vertical-align: middle;"><span class="ph">0</span></div>
+        <input type="number" 
+               pattern="[0-9]*" 
+               inputmode="numeric" 
+               id="dispTheoretical" 
+               class="inline-input active" 
+               placeholder="0" 
+               min="0" />
         円で，<br>
         現金 / 黒端末の実在高が
-        <div class="display" id="dispActual" data-field="actual" style="display: inline-block; min-width: 6.5rem; min-height: 2.2rem; padding: 0.2rem 0.75rem; margin: 0 0.25rem; vertical-align: middle;"><span class="ph">0</span></div>
+        <input type="number" 
+               pattern="[0-9]*" 
+               inputmode="numeric" 
+               id="dispActual" 
+               class="inline-input" 
+               placeholder="0" 
+               min="0" />
         円．
       </div>
       
-      <div class="keypad" id="padA"></div>
-      <button class="btn" id="btnNext">次へ</button>
+      <button class="btn" id="btnNext" style="margin-top: 1.5rem;" disabled>次へ</button>
     </div>
-     
+
     <!-- STEP 2 -->
     <div class="card" id="card2">
       <div class="step-title"><span class="n">2</span>戻す額を入力</div>
@@ -736,14 +779,17 @@ navSpring.onUpdate(applyNav);
 })();
 
 /* ===========================================================
-   入力 UI
+   入力 UI 制御
    =========================================================== */
-const state = {theoretical:'', actual:'', b:'', activeStep1:'theoretical', optimal:null};
+const state = {b:'', optimal:null};
+const dispTheoretical = document.getElementById('dispTheoretical');
+const dispActual = document.getElementById('dispActual');
+const btnNext = document.getElementById('btnNext');
 
-function buildPad(container, step){
-  // 1ページ目は正の数のみ（マイナス不可），2ページ目も同様
+function buildPadB(){
+  const padB = document.getElementById('padB');
   const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
-  container.innerHTML='';
+  padB.innerHTML='';
   keys.forEach(k=>{
     const btn=document.createElement('button');
     btn.className='key';
@@ -751,68 +797,55 @@ function buildPad(container, step){
     if(k==='') btn.className+=' empty';
     btn.textContent=k;
     if(k!==''){
-      btn.addEventListener('click',()=>press(step,k));
+      btn.addEventListener('click',()=>pressB(k));
       makePressable(btn, 0.94);
     }
-    container.appendChild(btn);
+    padB.appendChild(btn);
   });
 }
 
-function press(step,k){
-  let targetField = step === 1 ? state.activeStep1 : 'b';
-  let v = state[targetField];
-  
+function pressB(k){
+  let v = state.b;
   if(k==='⌫'){
     v = v.slice(0,-1);
-  } else { // digit
+  } else {
     if(v==='0') v='';
     v = v + k;
   }
-  state[targetField]=v;
-  render();
+  state.b = v;
+  renderB();
 }
 
-function fmtDisplay(v){
-  if(v===''){
-    return `<span class="ph">0</span>`;
-  }
-  const n = parseInt(v,10);
-  return `${n.toLocaleString('ja-JP')}<span class="unit">円</span>`;
-}
-
-function render(){
-  document.getElementById('dispTheoretical').innerHTML = fmtDisplay(state.theoretical);
-  document.getElementById('dispActual').innerHTML = fmtDisplay(state.actual);
-  document.getElementById('dispB').innerHTML = fmtDisplay(state.b);
-  
-  // ディスプレイのフォーカス切替表示
-  const dispTheo = document.getElementById('dispTheoretical');
-  const dispAct = document.getElementById('dispActual');
-  if(state.activeStep1 === 'theoretical'){
-    dispTheo.classList.add('active');
-    dispAct.classList.remove('active');
+function renderB(){
+  const dispB = document.getElementById('dispB');
+  if(state.b===''){
+    dispB.innerHTML = `<span class="ph">0</span>`;
   } else {
-    dispAct.classList.add('active');
-    dispTheo.classList.remove('active');
+    const n = parseInt(state.b,10);
+    dispB.innerHTML = `${n.toLocaleString('ja-JP')}<span class="unit">円</span>`;
   }
-
-  // btnNext有効化（両方のフィールドに入力がある場合）
-  const theoValid = state.theoretical!=='';
-  const actValid = state.actual!=='';
-  document.getElementById('btnNext').disabled = !(theoValid && actValid);
 }
+
+function updateStep1Status() {
+  const theoValid = dispTheoretical.value.trim() !== '';
+  const actValid = dispActual.value.trim() !== '';
+  btnNext.disabled = !(theoValid && actValid);
+}
+
+dispTheoretical.addEventListener('input', updateStep1Status);
+dispActual.addEventListener('input', updateStep1Status);
+
+dispTheoretical.addEventListener('focus', () => {
+  dispTheoretical.classList.add('active');
+  dispActual.classList.remove('active');
+});
+
+dispActual.addEventListener('focus', () => {
+  dispActual.classList.add('active');
+  dispTheoretical.classList.remove('active');
+});
 
 function parseVal(v){ return parseInt(v||'0',10); }
-
-/* --- ディスプレイタップによるアクティブ切替 --- */
-document.getElementById('dispTheoretical').addEventListener('click', ()=>{
-  state.activeStep1 = 'theoretical';
-  render();
-});
-document.getElementById('dispActual').addEventListener('click', ()=>{
-  state.activeStep1 = 'actual';
-  render();
-});
 
 /* --- btnReset の出入り --- */
 const resetSpring = new Spring(0, {bounce:0, duration:0.4, precision:0.002});
@@ -825,37 +858,36 @@ function showReset(){ btnReset.style.display='block'; resetSpring.to(1); }
 function hideReset(){ resetSpring.to(0); }
 
 /* ---- STEP1 -> STEP2 ---- */
-document.getElementById('btnNext').addEventListener('click',()=>{
-  const theoretical = parseVal(state.theoretical);
-  const actual = parseVal(state.actual);
-  // ズレの額 a = 実在高 - 理論在高
+btnNext.addEventListener('click', () => {
+  const theoretical = parseVal(dispTheoretical.value);
+  const actual = parseVal(dispActual.value);
   const a = actual - theoretical;
 
   state.optimal = computeOptimal(a);
-  const {optimalBMods, bestBagCombos} = state.optimal;
+  const { optimalBMods, bestBagCombos } = state.optimal;
 
-  // 条件表示
   let html = `<div class="label">過不足額：<b>${a >= 0 ? '+' : ''}${a.toLocaleString('ja-JP')} 円</b></div>
     <div class="label" style="margin-top:.5rem;">戻す額の「下一桁」を次のいずれかに:</div>
-    <div class="modlist">${optimalBMods.map(m=>`<span class="modchip">${m}</span>`).join('')}</div>
+    <div class="modlist">${optimalBMods.map(m => `<span class="modchip">${m}</span>`).join('')}</div>
     <div class="label">【戻しの条件】</div>`;
-  optimalBMods.forEach(bm=>{
+  optimalBMods.forEach(bm => {
     const [bValTarget] = bestBagCombos[bm];
     const items = returnBags[bValTarget].items;
     html += `<div class="cond">下一桁を <b>${bm}</b> にする場合：${bagStr(items)} が含まれる会計を探す（計 ${bValTarget} 円分）</div>`;
   });
+  
   document.getElementById('condBox').innerHTML = html;
   document.getElementById('minB').textContent = (-a).toLocaleString('ja-JP');
 
   measure();
-  navSpring.to(1, {bounce:0, duration:0.4});
+  navSpring.to(1, { bounce: 0, duration: 0.4 });
   showReset();
-  document.getElementById('msgB').innerHTML='';
-  document.getElementById('resultBox').innerHTML='';
+  document.getElementById('msgB').innerHTML = '';
+  document.getElementById('resultBox').innerHTML = '';
 
-  document.querySelectorAll('#condBox .modchip').forEach((chip,i)=>{
-    chip.style.opacity='0';
-    setTimeout(()=>materialize(chip,{blur:4,lift:8,scaleFrom:0.8,bounce:0.25,duration:0.4}), 90 + i*45);
+  document.querySelectorAll('#condBox .modchip').forEach((chip, i) => {
+    chip.style.opacity = '0';
+    setTimeout(() => materialize(chip, { blur: 4, lift: 8, scaleFrom: 0.8, bounce: 0.25, duration: 0.4 }), 90 + i * 45);
   });
 });
 
@@ -867,8 +899,8 @@ document.getElementById('btnBack').addEventListener('click',()=>{
 
 /* ---- 計算 ---- */
 document.getElementById('btnCalc').addEventListener('click',()=>{
-  const theoretical = parseVal(state.theoretical);
-  const actual = parseVal(state.actual);
+  const theoretical = parseVal(dispTheoretical.value);
+  const actual = parseVal(dispActual.value);
   const a = actual - theoretical;
   const b = parseVal(state.b);
   
@@ -906,13 +938,17 @@ document.getElementById('btnCalc').addEventListener('click',()=>{
 
 /* ---- リセット ---- */
 btnReset.addEventListener('click',()=>{
-  state.theoretical=''; state.actual=''; state.b=''; state.activeStep1='theoretical'; state.optimal=null;
+  dispTheoretical.value = '';
+  dispActual.value = '';
+  state.b = '';
+  state.optimal = null;
   navSpring.to(0, {bounce:0, duration:0.4});
   hideReset();
   document.getElementById('resultBox').innerHTML='';
   document.getElementById('msgB').innerHTML='';
   document.getElementById('condBox').innerHTML='';
-  render();
+  renderB();
+  updateStep1Status();
   measure();
 });
 
@@ -933,9 +969,9 @@ window.addEventListener('scroll', navEdge, {passive:true});
  document.getElementById('btnBack'),
  btnReset].forEach(b => makePressable(b, 0.982));
 
-buildPad(document.getElementById('padA'), 1);
-buildPad(document.getElementById('padB'), 2);
-render();
+buildPadB();
+renderB();
+updateStep1Status();
 measure();
 
 if(window.ResizeObserver){
