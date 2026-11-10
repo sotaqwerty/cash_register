@@ -806,6 +806,11 @@ dispActual.addEventListener('focus', () => {
   setTimeout(() => dispActual.select(), 50);
 });
 
+inputB.addEventListener('focus', () => {
+  // タップ時にテキストを全選択して上書き可能にする
+  setTimeout(() => inputB.select(), 50);
+});
+
 function parseVal(v){ return parseInt(v||'0',10); }
 
 /* --- btnReset の出入り --- */
